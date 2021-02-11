@@ -15,8 +15,8 @@ App.use(cors())
 mongoose.connect(uri, {
     useNewUrlParser: true,
     useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false
+    useUnifiedTopology: true
+    // useFindAndModify: false
 })
     .then(() => {
     console.log("connected to database");
@@ -26,13 +26,15 @@ mongoose.connect(uri, {
     console.log(err);
 });
 
+App.use(express.json());
+
 App.use(cors(
     {
       origin: "http://localhost:3000", // allow to server to accept request from different origin
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
       credentials: true // allow session cookie from browser to pass through
     }
-  ));
+));
 
 App.use('/user', userRouter);
 
