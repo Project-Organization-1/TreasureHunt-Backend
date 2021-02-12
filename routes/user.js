@@ -1,33 +1,41 @@
 const router = require('express').Router();
 let User = require('../models/user.model');
 
-router.route('/').get((req,res) => {
+router.route('/').get((req, res) => {
   User.find()
     .then(users => res.json(users))
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
 router
-.route('/login/:gpId/:email').get( async (req, res) => {
-  const groupId = req.params.gpId;
-  const email = req.params.email;
-  console.log(groupId);
-  console.log(email);
+  .route('/login/:gpId/:email').get(async (req, res) => {
+    try {
+      const groupId = req.params.gpId;
+      const email = req.params.email;
+      // console.log(groupId);
+      // console.log(email);
 
-  const group = await User.find({groupId: groupId});
-  
-  for(let user of group){
-    // console.log(user)
-    if(email === user.email){
+      const group = await User.find({ groupId: groupId });
+      let foundUser;
 
-      res.append("user", user);
-      console.log(res);
-      return res.status(200).json(user);
+      if (group.length == 0) {
+        return res.status(200).json({ "message": "group id not found!" });
+      }
+
+      for (let user of group) {
+        if (email === user.email) {
+          foundUser = user;
+          break;
+        }
+      }
+      if(!foundUser) return res.status(200).json({"message" : "user not found"});
+
+      return res.status(200).json(foundUser);
+
+    } catch (err) {
+      return res.status(400).json({ "err": "some error occurred" });
     }
-  }
-  return res.status(200).send('group nt found')
-  console.log(group);
-})
+  })
 
 // router.route('/').get((req, res) => {
 //   Note.find({googleId : req.params.googleId})
