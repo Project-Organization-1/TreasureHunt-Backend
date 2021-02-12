@@ -8,16 +8,24 @@ router.route('/').get((req,res) => {
 });
 
 router
-.route('/login/Q').get( async (req, res) => {
+.route('/login/:gpId/:email').get( async (req, res) => {
   const groupId = req.params.gpId;
   const email = req.params.email;
   console.log(groupId);
   console.log(email);
 
   const group = await User.find({groupId: groupId});
-  if(!group){
-    return res.statusMessage('Group not found!')
+  
+  for(let user of group){
+    // console.log(user)
+    if(email === user.email){
+
+      res.append("user", user);
+      console.log(res);
+      return res.status(200).json(user);
+    }
   }
+  return res.status(200).send('group nt found')
   console.log(group);
 })
 
