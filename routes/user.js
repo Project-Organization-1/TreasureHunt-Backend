@@ -19,7 +19,7 @@ router
       let foundUser;
 
       if (group.length == 0) {
-        return res.status(200).json({ "message": "group id not found!" });
+        return res.status(201).json({ "message": "group id not found!" });
       }
 
       for (let user of group) {
@@ -28,7 +28,7 @@ router
           break;
         }
       }
-      if(!foundUser) return res.status(200).json({"message" : "user not found"});
+      if(!foundUser) return res.status(202).json({"message" : "user not found"});
 
       return res.status(200).json(foundUser);
 
