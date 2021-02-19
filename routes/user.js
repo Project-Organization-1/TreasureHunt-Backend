@@ -1,5 +1,7 @@
 const router = require('express').Router();
 let User = require('../models/user.model');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 router.route('/').get((req, res) => {
   User.find()
@@ -12,8 +14,6 @@ router
     try {
       const groupId = req.params.gpId;
       const email = req.params.email;
-      // console.log(groupId);
-      // console.log(email);
 
       const group = await User.find({ groupId: groupId });
       let foundUser;
@@ -30,10 +30,13 @@ router
       }
       if(!foundUser) return res.status(202).json({"message" : "user not found"});
 
-      return res.status(200).json(foundUser);
+      // User found... return the token to the client
+      const token = jwt.sign(foundUser.toJSON(), process.env.KEY, { algorithm: process.env.ALGORITHM, expiresIn: "5h" })
+      return res.status(200).json({token : token.toString()});
 
     } catch (err) {
-      return res.status(400).json({ "err": "some error occurred" });
+      console.log(err)
+      return res.status(400).json(err);
     }
   })
 
