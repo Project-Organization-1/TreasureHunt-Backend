@@ -31,7 +31,7 @@ router
       if(!foundUser) return res.status(202).json({"message" : "user not found"});
 
       // User found... return the token to the client
-      const token = jwt.sign(foundUser.toJSON(), process.env.KEY, { algorithm: process.env.ALGORITHM, expiresIn: "5h" })
+      const token = jwt.sign(foundUser.toJSON(), process.env.KEY, { algorithm: process.env.ALGORITHM })
       return res.status(200).json({token : token.toString()});
 
     } catch (err) {
