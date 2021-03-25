@@ -11,7 +11,8 @@ const server = http.createServer(App);
 dotenv.config();
 const uri = process.env.ATLAS_URI;
 
-var cors = require('cors')
+var cors = require('cors');
+const { group } = require("console");
 
 App.use(cors())
 
@@ -43,58 +44,34 @@ App.use('/user', userRouter);
 
 const io = socketio(server, {
     cors: {
-        origin: '*',
-    }
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
 });
 
-//const io_namespace = io.of('/foobar');
+io.on('connection', socket => {
+    const email = socket.handshake.query.loggedUser;
+    const groupId = socket.handshake.query.groupId;
 
-io.on('connection', (socket) => {
-    // console.log("User connected" + socket.handshake.query.loggedUser);
+    // Immediately Join room with group id
+    socket.join(groupId);
+    console.log(`${email} joined group ${groupId}`);
+    socket.emit('you-joined-room', groupId, io.of('/').adapter.rooms.get(groupId) ? io.of('/').adapter.rooms.get(groupId).size : 1)
+    const set = io.of('/').adapter.rooms;
+    console.log(set)
 
-    // console.log(`Count = ${socket.conn.server.clientsCount}`);
-
-    socket.on('join-room', data => {
-        console.log('room join');
-        console.log(data);
-        socket.join(data.room);
-        const set = io.of('/').adapter.rooms;
-        console.log(set)
-        const size = io.of('/').adapter.rooms.get(data.room).size;
-        console.log(size);
-        io.emit('set-count', size)
-    });
-
-    io.of('/').adapter.on('leave-room', (data) => {
-        try {
-            console.log("here... data is " + data)
-            if (io.of('/').adapter.rooms.get(data.room)) {
-                socket.leave(data.room);
-                console.log(`${data.room} left`)
-                io.emit('set-count', size)
-            }
-        } catch (e) {
-            console.log('[error]', 'leave room :', e);
-            socket.emit('error', 'couldnt perform requested action');
-        }
-
-    });
-
-    // socket.on('count', data => {
-    //     console.log(data.room);
-    //     socket.broadcast.emit('set-count', data)
-    // });
-
-
+    socket.to(groupId).emit('member-joined-room', email, groupId, socket.id, io.of('/').adapter.rooms.get(groupId) ? io.of('/').adapter.rooms.get(groupId).size : 1);
 
     socket.on('disconnect', () => {
-        console.log('user connected ? ' + socket.connected);
+        socket.leave(groupId)
+        io.in(groupId).emit('room-left', email, groupId, io.of('/').adapter.rooms.get(groupId) ? io.of('/').adapter.rooms.get(groupId).size : 1);
+        console.log(`Disconnected ${socket.id} with email ${email}`);
+        socket.broadcast.to(groupId).emit('member-disconnected', email, io.of('/').adapter.rooms.get(groupId) ? io.of('/').adapter.rooms.get(groupId).size : 1);
     })
 
-    // console.log(socket.server.engine.clientsCount);
-    // console.log(io.engine.clientsCount);
-    // console.log(io_namespace.server.engine.clientsCount);
-    // console.log(socket.client.conn.emit.length)
 })
 
 server.listen(5000, () => {
